@@ -1,0 +1,30 @@
+import os
+
+from flask import Flask
+
+
+def create_app(test_config=None):
+    """Create and configure an instance of the Flask application."""
+    app = Flask(__name__, instance_relative_config=True)
+    # ensure the instance folder exists
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+
+    @app.route("/health")
+    def health():
+        return {"status": "ok"}
+
+    # register the database commands
+    from .models.database import Database
+
+    with app.app_context():
+        Database().init_db()
+
+    # apply the blueprints to the app
+    from .endpoints.users import users
+
+    app.register_blueprint(users)
+
+    return app
