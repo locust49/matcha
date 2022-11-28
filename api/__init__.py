@@ -24,7 +24,9 @@ def create_app(test_config=None):
 
     # apply the blueprints to the app
     from .endpoints.users import users
+    from .endpoints.authentication import authentication
 
     app.register_blueprint(users)
+    app.register_blueprint(authentication)
 
     return app

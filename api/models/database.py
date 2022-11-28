@@ -39,6 +39,12 @@ class Database:
         if db is not None:
             db.close()
 
+    def get_cursor(self):
+        """
+        Get the database cursor
+        """
+        return self.__cursor
+
     def init_db(self):
         """
         Initialize the database
