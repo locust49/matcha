@@ -1,5 +1,4 @@
-from flask import g
-from .database import Database
+from .database import db_connection as db
 
 
 class Users:
@@ -9,22 +8,28 @@ class Users:
             and len(username) > 0
             and len(username) < 20
             and username.isalnum()
-        ), "Username must be alphanumeric and between 1 and 20 characters, received {}".format(
+        ), "Username must be alphanumeric and between 1 and 20 characters,\
+            received {}".format(
             username
         )
         assert (
             email is not None
             and len(email) > 0
             and len(email) < 50  # TODO: Add validator of email
-        ), "Email must be between 1 and 50 characters, received {}".format(email)
+        ), "Email must be between 1 and 50 characters,\
+            received {}".format(
+            email
+        )
         assert password is not None, "Missing password".format(password)
         assert (
-            first_name is not None and len(first_name) > 0 and len(first_name) < 20
+            first_name is not None and len(
+                first_name) > 0 and len(first_name) < 20
         ), "First name must be between 1 and 20 characters, received {}".format(
             first_name
         )
         assert (
-            last_name is not None and len(last_name) > 0 and len(last_name) < 20
+            last_name is not None and len(
+                last_name) > 0 and len(last_name) < 20
         ), "Last name must be between 1 and 20 characters, received {}".format(
             last_name
         )
@@ -52,50 +57,44 @@ class Users:
 
     # Insert to database
     def insert(self):
-        db = Database().get_db()
-        # db.cursor().execute(
-        #     "INSERT INTO users (username, email, password, first_name, last_name) VALUES ('{}', '{}', '{}', '{}', '{}') RETURNING uuid".format(
-        #         self.username,
-        #         self.email,
-        #         self.password,
-        #         self.first_name,
-        #         self.last_name,
-        #     ),
-        # )
-        # db.commit()
-        db.cursor().execute("SELECT * FROM users;")
-        user = db.cursor().fetchone()
-        print("returning user: ", user)
-        if user is not None:
-            return user
+        print("Inserting user to database + db = {}".format(db))
+        db.get_cursor().execute(
+            "INSERT INTO users (username, email, password, first_name, \
+                last_name) VALUES ('{}', '{}', '{}', '{}', '{}') RETURNING\
+                uuid".format(
+                self.username,
+                self.email,
+                self.password,
+                self.first_name,
+                self.last_name,
+            ),
+        )
+        user_uuid = db.get_cursor().fetchone()
+        print("returning user: ", user_uuid)
+        if user_uuid is not None:
+            return {"uuid": user_uuid}
         else:
-            return None
+            return {"msg": "User not inserted"}
 
     # Get all users
     @classmethod
     def get_all(cls):
-        # db = Database().get_db()
-        # try:
-        #     db.cursor().execute("SELECT * FROM users")
-        #     users = db.cursor().fetchall()
-        #     return users
-        # except Exception as e:
-        #     print(e)
-        #     return None
-        db_inst = Database()
-        db_inst.get_db()
-        db_inst.get_cursor().execute("SELECT * FROM users")
-        users = db_inst.get_cursor().fetchall()
-        print(">>>>>>>>>> ", db_inst.get_cursor().statusmessage)
-        print(users)
+        try:
+            db.get_cursor().execute("SELECT * FROM users")
+            users = db.get_cursor().fetchall()
+            return users
+        except Exception as e:
+            print(e)
+            return None
 
     # Get user by id
     @classmethod
     def get_by_uuid(cls, uuid):
-        db = Database().get_db()
-        user = db.cursor().execute("SELECT * FROM users WHERE uuid = {}".format(uuid))
+        user = db.get_cursor().execute(
+            "SELECT * FROM users WHERE uuid = '{}'".format(uuid)
+        )
         try:
-            user = db.cursor().fetchone()
+            user = db.get_cursor().fetchone()
             return user
         except Exception as e:
             print(e)
@@ -104,20 +103,17 @@ class Users:
     # Get user by username
     @classmethod
     def get_by_username(cls, username):
-        db = Database().get_db()
-        user = db.cursor().execute(
+        user = db.get_cursor().execute(
             "SELECT * FROM users WHERE username = '{}'".format(username)
         )
         try:
             print(">>> User  = ", user)
             print(">>> username  = ", username)
 
-            # user = db.cursor().fetchone()
+            user = db.get_cursor().fetchone()
             if user:
-                print("User found", user)
-                return dict(user)
+                return user
             else:
-                print("User not found", user)
                 return None
         except Exception as e:
             print(e)

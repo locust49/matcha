@@ -1,8 +1,3 @@
-
-
--- CREATE DATABASE db_matcha;
--- \c db_matcha;
-
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- -----------------------------------------------------

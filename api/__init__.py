@@ -17,11 +17,9 @@ def create_app(test_config=None):
         return {"status": "ok"}
 
     # register the database commands
-    from .models.database import Database
 
     with app.app_context():
-        Database().init_db()
-
+        from .models.database import db_connection
     # apply the blueprints to the app
     from .endpoints.users import users
     from .endpoints.authentication import authentication

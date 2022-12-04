@@ -1,3 +1,4 @@
+from api.endpoints.authentication import token_required
 from ..models.users import Users
 from flask import request, Blueprint
 
@@ -26,7 +27,8 @@ def get_user_by_uuid(user_uuid):
 
 
 @users.route("/all", methods=["GET"])
-def get_all_users():
+@token_required
+def get_all_users(current_user):
     print("Getting all users")
     users = Users.get_all()
-    return {"success": True}, 200
+    return {"users": users}, 200
