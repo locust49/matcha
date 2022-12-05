@@ -2,48 +2,61 @@ import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
 from psycopg2.extras import RealDictCursor
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from flask import current_app
 
-load_dotenv()
+
+loading = load_dotenv()
+
+if not loading:
+    raise ValueError("No .env file found")
+
+db_config = {
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT"),
+    "user": os.getenv("DB_USERNAME"),
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_NAME"),
+    "cursor_factory": RealDictCursor,
+}
 
 
 class Database:
     __connection = None
     __cursor = None
 
-    def __init__(self, db_name=None):
+    def __init__(self):
         """
         Initialize the database
         """
-        print("__Initializing__ database with {} : {}".format(
-            Database.__connection, db_name))
+        print(
+            "__Initializing__ database with connection {}".format(Database.__connection)
+        )
+
         if Database.__connection is None:
             try:
-                Database.__connection = psycopg2.connect(
-                    host=os.getenv("DB_HOST"),
-                    user=os.getenv("DB_USERNAME"),
-                    password=os.getenv("DB_PASSWORD"),
-                    dbname=db_name,
-                )
+                Database.__connection = psycopg2.connect(**db_config)
+                if Database.__connection is None:
+                    raise Exception("Database connection failed")
                 Database.__connection.set_session(
                     autocommit=True, isolation_level=ISOLATION_LEVEL_READ_COMMITTED
                 )
-                Database.__cursor = self.__connection.cursor(
-                    cursor_factory=RealDictCursor)
+                Database.__cursor = Database.__connection.cursor()
             except Exception as e:
                 print("Database connection failed with error: ", e)
         else:
             print("Connection established")
 
-    @ classmethod
-    def get_cursor(cls):
+    @classmethod
+    def get_cursor(cls) -> RealDictCursor:
         """
         Get the database cursor
         """
+        if cls.__cursor is None:
+            raise Exception("Database connection failed")
         return cls.__cursor
 
-    @ classmethod
+    @classmethod
     def get_connection(cls):
         """
         Get the database connection
@@ -56,22 +69,12 @@ class Database:
         """
 
         if self.get_connection() is not None:
-            print("Initializing database")
             with current_app.open_resource("models/schema.sql") as f:
-                self.get_cursor().execute(
-                    "DROP DATABASE IF EXISTS " + os.getenv("DB_NAME") + ";"
-                )
-                self.get_cursor().execute(
-                    "CREATE DATABASE " + os.getenv("DB_NAME") + ";"
-                )
-                self.close_db()
-                self.__init__(os.getenv("DB_NAME"))
                 self.executeSchema()
                 return self
         else:
             Database.__connection = None
             Database.__cursor = None
-            raise Exception("Database connection failed")
 
     def executeSchema(self):
         """
@@ -80,13 +83,13 @@ class Database:
         with current_app.open_resource("models/schema.sql") as f:
             self.get_cursor().execute(f.read().decode("utf8"))
 
-    @ classmethod
+    @classmethod
     def close_db(cls):
         """
         Close the database connection
         """
-        cls.__cursor.close()
-        cls.__connection.close()
+        cls.__cursor.close() if cls.__cursor is not None else None
+        cls.__connection.close() if cls.__connection is not None else None
         cls.__connection = None
         cls.__cursor = None
 

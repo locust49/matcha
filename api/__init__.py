@@ -19,12 +19,12 @@ def create_app(test_config=None):
     # register the database commands
 
     with app.app_context():
-        from .models.database import db_connection
+        from .config.database import db_connection
     # apply the blueprints to the app
-    from .endpoints.users import users
-    from .endpoints.authentication import authentication
+    from .users.users_controllers import users
+    from .authentication.auth_controllers import authentication
 
-    app.register_blueprint(users)
-    app.register_blueprint(authentication)
+    app.register_blueprint(users, url_prefix="/users")
+    app.register_blueprint(authentication, url_prefix="/auth")
 
     return app

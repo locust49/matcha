@@ -1,4 +1,5 @@
-from .database import db_connection as db
+from ..config.database import db_connection as db
+from werkzeug.security import generate_password_hash
 
 
 class Users:
@@ -22,21 +23,19 @@ class Users:
         )
         assert password is not None, "Missing password".format(password)
         assert (
-            first_name is not None and len(
-                first_name) > 0 and len(first_name) < 20
+            first_name is not None and len(first_name) > 0 and len(first_name) < 20
         ), "First name must be between 1 and 20 characters, received {}".format(
             first_name
         )
         assert (
-            last_name is not None and len(
-                last_name) > 0 and len(last_name) < 20
+            last_name is not None and len(last_name) > 0 and len(last_name) < 20
         ), "Last name must be between 1 and 20 characters, received {}".format(
             last_name
         )
         self.username = username
         self.email = email
         # encrypted password
-        self.password = password
+        self.password = generate_password_hash(password, method="sha256")
         self.first_name = first_name
         self.last_name = last_name
 
