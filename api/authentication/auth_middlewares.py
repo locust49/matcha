@@ -21,13 +21,15 @@ def token_required(fct):
         if "Authorization" in request.headers:
             token = request.headers["Authorization"][7:]
         if not token:
-            return jsonify({"message": "A valid token is missing"})
+            return jsonify({"message": "A valid token is missing"}), 401
         try:
             data = decode(token, get_secret_key(), algorithms=["HS256"])
-            current_user = us.find_one(data["uuid"])
+            logged_user = us.find_one(data["uuid"])
+            if not logged_user:
+                return jsonify({"message": "User not found"}), 404
         except Exception as e:
             print("Exception: {}".format(e))
             return jsonify({"Error": str(e)})
-        return fct(current_user, *args, **kwargs)
+        return fct(logged_user, *args, **kwargs)
 
     return decorator

@@ -29,9 +29,6 @@ class Database:
         """
         Initialize the database
         """
-        print(
-            "__Initializing__ database with connection {}".format(Database.__connection)
-        )
 
         if Database.__connection is None:
             try:
@@ -43,7 +40,7 @@ class Database:
                 )
                 Database.__cursor = Database.__connection.cursor()
             except Exception as e:
-                print("Database connection failed with error: ", e)
+                raise Exception("Database connection failed.")
         else:
             print("Connection established")
 
@@ -69,19 +66,13 @@ class Database:
         """
 
         if self.get_connection() is not None:
-            with current_app.open_resource("models/schema.sql") as f:
-                self.executeSchema()
+            with current_app.open_resource("config/schema.sql") as f:
+                self.get_cursor().execute(f.read().decode("utf8"))
                 return self
         else:
             Database.__connection = None
             Database.__cursor = None
-
-    def executeSchema(self):
-        """
-        Execute the schema
-        """
-        with current_app.open_resource("models/schema.sql") as f:
-            self.get_cursor().execute(f.read().decode("utf8"))
+            
 
     @classmethod
     def close_db(cls):

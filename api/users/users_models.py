@@ -56,7 +56,7 @@ class Users:
 
     # Insert to database
     def insert(self):
-        print("Inserting user to database + db = {}".format(db))
+        print("Inserting user to database = {}".format(self))
         db.get_cursor().execute(
             "INSERT INTO users (username, email, password, first_name, \
                 last_name) VALUES ('{}', '{}', '{}', '{}', '{}') RETURNING\
@@ -71,7 +71,7 @@ class Users:
         user_uuid = db.get_cursor().fetchone()
         print("returning user: ", user_uuid)
         if user_uuid is not None:
-            return {"uuid": user_uuid}
+            return user_uuid
         else:
             return {"msg": "User not inserted"}
 
@@ -89,12 +89,9 @@ class Users:
     # Get user by id
     @classmethod
     def get_by_uuid(cls, uuid):
-        user = db.get_cursor().execute(
-            "SELECT * FROM users WHERE uuid = '{}'".format(uuid)
-        )
+        db.get_cursor().execute("SELECT * FROM users WHERE uuid = '{}'".format(uuid))
         try:
-            user = db.get_cursor().fetchone()
-            return user
+            return db.get_cursor().fetchone()
         except Exception as e:
             print(e)
             return None
@@ -102,18 +99,11 @@ class Users:
     # Get user by username
     @classmethod
     def get_by_username(cls, username):
-        user = db.get_cursor().execute(
+        db.get_cursor().execute(
             "SELECT * FROM users WHERE username = '{}'".format(username)
         )
         try:
-            print(">>> User  = ", user)
-            print(">>> username  = ", username)
-
-            user = db.get_cursor().fetchone()
-            if user:
-                return user
-            else:
-                return None
+            return db.get_cursor().fetchone()
         except Exception as e:
             print(e)
             return None

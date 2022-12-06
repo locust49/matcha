@@ -1,12 +1,12 @@
 from .users_models import Users
 
 
-def insert_one(user):
-    inserted_user = Users.insert(user)
+def insert_one(user: Users):
+    inserted_user = user.insert()
     return inserted_user
 
 
-def find_one(user_uuid=None, username=None):
+def find_one(user_uuid=None, username=None):  # should return -> Users or Exception:
     if user_uuid:
         user = Users.get_by_uuid(user_uuid)
     elif username:
@@ -15,6 +15,7 @@ def find_one(user_uuid=None, username=None):
         raise Exception("No user_uuid or username provided")
     if user:
         return dict(user)
+    # should throw an error here
     return None
 
 

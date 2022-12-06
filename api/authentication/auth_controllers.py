@@ -16,8 +16,8 @@ def signup_user():
     # needs verification
     if not data:
         return jsonify({"message": "No input data provided"}), 400
-    us.insert_one(data)
-    return jsonify({"message": "registered successfully"})
+    inserted_user = us.insert_one(Users.from_dict(data))
+    return jsonify({"message": "registered successfully", "user": inserted_user}), 201
 
 
 @authentication.route("/login", methods=["POST"])
@@ -29,7 +29,7 @@ def login():
     user = us.find_one(username=auth["username"])
     if not user:
         return make_response(
-            "inexistant user", 401, {"Authentication": 'login required"'}
+            {"error": "inexistant user"}, 404, {"Authentication": 'login required"'}
         )
     print(
         "Verifying password : {}".format(
