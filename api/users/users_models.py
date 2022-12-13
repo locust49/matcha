@@ -23,8 +23,11 @@ class Users:
         )
         assert password is not None, "Missing password".format(password)
         assert (
-            first_name is not None and len(first_name) > 0 and len(first_name) < 20
-        ), "First name must be between 1 and 20 characters, received {}".format(
+            first_name is not None
+            and len(first_name) > 0
+            and len(first_name) < 20
+        ), "First name must be between 1 and 20 characters, received {}\
+        ".format(
             first_name
         )
         assert (
@@ -89,7 +92,9 @@ class Users:
     # Get user by id
     @classmethod
     def get_by_uuid(cls, uuid):
-        db.get_cursor().execute("SELECT * FROM users WHERE uuid = '{}'".format(uuid))
+        db.get_cursor().execute(
+            "SELECT * FROM users WHERE uuid = '{}'".format(uuid)
+        )
         try:
             return db.get_cursor().fetchone()
         except Exception as e:
@@ -108,11 +113,25 @@ class Users:
             print(e)
             return None
 
+    # Delete user by id
+    @classmethod
+    def delete_by_uuid(cls, uuid):
+        db.get_cursor().execute(
+            "DELETE FROM users WHERE uuid = '{}'".format(uuid)
+        )
+        try:
+            return db.get_cursor().fetchone()
+        except Exception as e:
+            print(e)
+            return None
+
     def __repr__(self) -> str:
-        return f"User({self.username = }, {self.email = }, {self.password = }, {self.first_name = }, {self.last_name = })"
+        return f"User({self.username = }, {self.email = }, {self.password = },\
+            {self.first_name = }, {self.last_name = })"
 
     def __str__(self) -> str:
-        return f"User({self.username = }, {self.email = }, {self.password = }, {self.first_name = }, {self.last_name = })"
+        return f"User({self.username = }, {self.email = }, {self.password = },\
+            {self.first_name = }, {self.last_name = })"
 
     def __getitem__(self, key):
         return getattr(self, key)

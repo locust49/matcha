@@ -19,7 +19,7 @@ class ErrorEnum(Enum):
     # Auth
     AUTH_INVALID_TOKEN = 13, "Invalid token"
     AUTH_INVALID_REFRESH_TOKEN = 14, "Invalid refresh token"
-    AUTH_INVALID_CREDENTIALS = 15, "Invalid credentials"
+    AUTH_INVALID_CREDENTIALS = 15, "Authentication failed: Invalid credentials"
     AUTH_TOKEN_EXPIRED = 16, "Token expired"
     AUTH_REFRESH_TOKEN_EXPIRED = 17, "Refresh token expired"
     AUTH_INVALID_USER = 18, "Invalid user"
@@ -27,4 +27,6 @@ class ErrorEnum(Enum):
     # Database
     DB_CONNECTION_FAILED = 19, "Database connection failed"
     DB_QUERY_FAILED = 20, "Database query failed"
-    
+
+    # Requests
+    REQ_INVALID_INPUT = 21, "Invalid data provided"
