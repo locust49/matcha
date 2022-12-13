@@ -10,18 +10,25 @@ users = Blueprint("users", __name__)
 
 @users.route("/<user_uuid>", methods=["GET"])
 def get_user_by_uuid(user_uuid):
-    user = us.find_one(user_uuid)
-    if not user:
+    result = {"user": us.find_one(user_uuid)}
+    # user = us.find_one(user_uuid)
+    if not result["user"]:  # TODO: change condition to check if user
+        # contains an error
         return ErrorResponse(ErrorEnum.USR_NOT_FOUND).not_found()
-    return SuccessResponse("User found", user).ok()
+    return SuccessResponse(result).ok()
 
 
 @users.route("/all", methods=["GET"], defaults={"page": 1, "per_page": 10})
 @token_required
 def get_all_users(current_user, page, per_page):
-    print("current_user: {}".format(current_user, page, per_page))
     # users = us.find_all_paginated(page, per_page)
     users = us.find_all()
-    if not users:
-        return {"message": "No users found"}, 404
-    return {"users": users}, 200
+    return SuccessResponse({"users": users}).ok()
+
+
+@users.route("/remove/<user_uuid>", methods=["DELETE"])
+def remove_user(user_uuid):
+    result = us.remove_one(user_uuid)
+    if not result:
+        return ErrorResponse(ErrorEnum.USR_NOT_FOUND).not_found()
+    return SuccessResponse(result).no_content()

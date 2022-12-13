@@ -3,15 +3,14 @@ from .error_enum import ErrorEnum
 
 
 class SuccessResponse:
-    def __init__(self, message, data):
-        self.message = message
+    def __init__(self, data):
         self.data = data
 
     def to_json(self):
         if self.data is None:
-            return {"message": self.message}
+            return {}
 
-        return {"message": self.message, "data": self.data}
+        return {"data": self.data}
 
     def ok(self):
         return self.to_json(), HTTPStatus.OK
@@ -34,11 +33,12 @@ class SuccessResponse:
 
 class ErrorResponse:
     def __init__(self, code: ErrorEnum):
-        # self.error = error
         self.code = code
 
     def to_json(self):
-        return {"code": self.code.name, "error": self.code.value[1]}
+        return {
+            "error": {"code": self.code.name, "message": self.code.value[1]}
+        }
 
     def bad_request(self):
         return self.to_json(), HTTPStatus.BAD_REQUEST
