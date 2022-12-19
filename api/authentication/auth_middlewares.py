@@ -1,10 +1,10 @@
 from functools import wraps
-from flask import request, jsonify
-import jwt
+from flask import request
+from jwt.exceptions import PyJWTError
 from jwt.api_jwt import decode
 import os
 from api.consts.error_enum import ErrorEnum
-from api.consts.responses import ErrorResponse
+from api.consts.responses import ErrorResponse, JWTErrorResponse
 
 import api.users.users_services as us
 
@@ -29,8 +29,8 @@ def token_required(fct):
             logged_user = us.find_one(data["uuid"])
             if not logged_user:
                 return ErrorResponse(ErrorEnum.AUTH_INVALID_USER).unauthorized()
-        except Exception as e:
-            return jsonify({"Error": str(e)})
-        return fct(logged_user, *args, **kwargs)
+        except PyJWTError as e:
+            return JWTErrorResponse(ErrorEnum.JWT_INVALID, e).unauthorized()
+        return fct({"logged_user": logged_user}, *args, **kwargs)
 
     return decorator

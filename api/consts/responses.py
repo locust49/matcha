@@ -36,9 +36,7 @@ class ErrorResponse:
         self.code = code
 
     def to_json(self):
-        return {
-            "error": {"code": self.code.name, "message": self.code.value[1]}
-        }
+        return {"error": {"code": self.code.name, "message": self.code.value[1]}}
 
     def bad_request(self):
         return self.to_json(), HTTPStatus.BAD_REQUEST
@@ -63,3 +61,18 @@ class ErrorResponse:
 
     def internal_server_error(self):
         return self.to_json(), HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+class JWTErrorResponse(ErrorResponse):
+    def __init__(self, code: ErrorEnum, error):
+        super().__init__(code)
+        self.error = error
+
+    def to_json(self):
+        return {
+            "error": {
+                "code": self.code.name,
+                "message": str(self.error),
+                "error": self.error.__class__.__name__,
+            }
+        }
