@@ -2,6 +2,8 @@ import os
 
 from flask import Flask
 
+from api.consts.responses import SuccessResponse
+
 
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
@@ -14,7 +16,7 @@ def create_app(test_config=None):
 
     @app.route("/health")
     def health():
-        return {"status": "ok"}
+        return SuccessResponse({"status": "ok"}).ok()
 
     # register the database commands
 
