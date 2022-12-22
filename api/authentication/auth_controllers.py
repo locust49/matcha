@@ -9,7 +9,10 @@ from api.consts.error_enum import ErrorEnum
 from .auth_middlewares import get_secret_key
 import api.users.users_services as us
 from api.users.users_models import Users
+from api.mail.mail_app import send_verification_email
 from ..consts.responses import SuccessResponse, ErrorResponse, JWTErrorResponse
+from ..authentication.auth_helpers import generate_verification_url
+import os
 
 authentication = Blueprint("authentication", __name__)
 
@@ -17,7 +20,7 @@ authentication = Blueprint("authentication", __name__)
 @authentication.route("/register", methods=["POST"])
 def signup_user():
     data: Union[Users, None] = request.get_json()
-    # needs verification
+    # data needs verification
     if not data:
         return ErrorResponse(ErrorEnum.REQ_INVALID_INPUT).bad_request()
     inserted_user = us.insert_one(Users.from_dict(data))
@@ -33,8 +36,11 @@ def signup_user():
         )
     except PyJWTError as e:
         return JWTErrorResponse(ErrorEnum.JWT_ERROR).internal_server_error()
-    # send mail here
-    print(f'* Sending verification email with token: {token.decode("UTF-8")} *')
+    verification_url = generate_verification_url(token.decode("UTF-8"))
+    try:
+        send_verification_email(data, verification_url)
+    except Exception as e:
+        return e
     return SuccessResponse(inserted_user).created()
 
 

@@ -2,8 +2,23 @@ from ..config.database import db_connection as db
 from werkzeug.security import generate_password_hash
 
 
-class Users:
-    def __init__(self, username, email, password, first_name, last_name) -> None:
+users_private_fields = [
+    "uuid",
+    "username",
+    "email",
+    "first_name",
+    "last_name",
+    "created_at",
+    "verified",
+    "password",
+]
+
+users_public_fields = users_private_fields.copy()
+users_public_fields.remove("password")
+
+
+class UsersPublic:
+    def __init__(self, username, email, first_name, last_name) -> None:
         assert (
             username is not None
             and len(username) > 0
@@ -21,7 +36,6 @@ class Users:
             received {}".format(
             email
         )
-        assert password is not None, "Missing password".format(password)
         assert (
             first_name is not None
             and len(first_name) > 0
@@ -37,17 +51,15 @@ class Users:
         )
         self.username = username
         self.email = email
-        # encrypted password
-        self.password = generate_password_hash(password, method="sha256")
         self.first_name = first_name
         self.last_name = last_name
+        self.verified = False
 
     # Return the object as a dictionary
     def to_dict(self):
         return {
             "username": self.username,
             "email": self.email,
-            "password": self.password,
             "first_name": self.first_name,
             "last_name": self.last_name,
         }
@@ -59,7 +71,6 @@ class Users:
 
     # Insert to database
     def insert(self):
-        print("Inserting user to database = {}".format(self))
         db.get_cursor().execute(
             "INSERT INTO users (username, email, password, first_name, \
                 last_name) VALUES ('{}', '{}', '{}', '{}', '{}') RETURNING\
@@ -72,7 +83,6 @@ class Users:
             ),
         )
         user_uuid = db.get_cursor().fetchone()
-        print("returning user: ", user_uuid)
         if user_uuid is not None:
             return user_uuid
         else:
@@ -82,7 +92,9 @@ class Users:
     @classmethod
     def get_all(cls):
         try:
-            db.get_cursor().execute("SELECT * FROM users")
+            db.get_cursor().execute(
+                "SELECT {} FROM users".format(",".join(users_public_fields))
+            )
             users = db.get_cursor().fetchall()
             return users
         except Exception as e:
@@ -91,9 +103,15 @@ class Users:
 
     # Get user by id
     @classmethod
-    def get_by_uuid(cls, uuid):
+    def get_by_uuid(cls, uuid, secure=True):
+        if not secure:
+            fields = users_private_fields
+        else:
+            fields = users_public_fields
         db.get_cursor().execute(
-            "SELECT * FROM users WHERE uuid = '{}'".format(uuid)
+            "SELECT {} FROM users WHERE uuid = '{}'".format(
+                ",".join(fields), uuid
+            )
         )
         try:
             return db.get_cursor().fetchone()
@@ -103,9 +121,15 @@ class Users:
 
     # Get user by username
     @classmethod
-    def get_by_username(cls, username):
+    def get_by_username(cls, username, secure=True):
+        if not secure:
+            fields = users_private_fields
+        else:
+            fields = users_public_fields
         db.get_cursor().execute(
-            "SELECT * FROM users WHERE username = '{}'".format(username)
+            "SELECT {} FROM users WHERE username = '{}'".format(
+                ",".join(fields), username
+            )
         )
         try:
             return db.get_cursor().fetchone()
@@ -118,6 +142,20 @@ class Users:
     def delete_by_uuid(cls, uuid):
         db.get_cursor().execute(
             "DELETE FROM users WHERE uuid = '{}'".format(uuid)
+        )
+        try:
+            return db.get_cursor().fetchone()
+        except Exception as e:
+            print(e)
+            return None
+
+    @classmethod
+    def verify_user(cls, uuid):
+        db.get_cursor().execute(
+            "UPDATE users SET verified = true WHERE uuid = '{}' \
+                RETURNING verified".format(
+                uuid
+            )
         )
         try:
             return db.get_cursor().fetchone()
@@ -138,3 +176,22 @@ class Users:
 
     def __del__(self):
         print("User object deleted")
+
+
+class Users(UsersPublic):
+    # Add more fields to the public class
+    def __init__(
+        self,
+        username,
+        email,
+        password,
+        first_name,
+        last_name,
+    ) -> None:
+        super().__init__(username, email, first_name, last_name)
+        # encrypted password
+        self.password = generate_password_hash(password, method="sha256")
+
+    # Return the object as a dictionary
+    def to_dict(self):
+        pass
