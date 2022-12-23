@@ -133,3 +133,7 @@ dmypy.json
 
 #env
 .env
+
+
+#trash
+.trash/
