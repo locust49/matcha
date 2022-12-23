@@ -26,7 +26,7 @@ def token_required(fct):
             return ErrorResponse(ErrorEnum.AUTH_INVALID_TOKEN).unauthorized()
         try:
             data = decode(token, get_secret_key(), algorithms=["HS256"])
-            logged_user = us.find_one(data["uuid"])
+            logged_user = us.find_one(user_uuid=data["uuid"])
             if not logged_user:
                 return ErrorResponse(ErrorEnum.AUTH_INVALID_USER).unauthorized()
         except PyJWTError as e:

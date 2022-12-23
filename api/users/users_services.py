@@ -10,13 +10,16 @@ def insert_one(user: Users):
     return inserted_user
 
 
+# TODO: should not specify args, should be generic as Specifications
 def find_one(
-    user_uuid=None, username=None, secure=True
+    user_uuid=None, username=None, email=None, secure=True
 ):  # should return -> Users or Exception:
     if user_uuid:
-        user = Users.get_by_uuid(user_uuid, secure)
+        user = UsersPublic.get_by_uuid(user_uuid, secure)
     elif username:
-        user = Users.get_by_username(username, secure)
+        user = UsersPublic.get_by_username(username, secure)
+    elif email:
+        user = UsersPublic.get_by_email(email, secure)
     else:
         raise Exception("No user_uuid or username provided")
     if user:

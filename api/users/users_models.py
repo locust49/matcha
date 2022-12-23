@@ -137,6 +137,24 @@ class UsersPublic:
             print(e)
             return None
 
+    # Get user by email
+    @classmethod
+    def get_by_email(cls, email, secure=True):
+        if not secure:
+            fields = users_private_fields
+        else:
+            fields = users_public_fields
+        db.get_cursor().execute(
+            "SELECT {} FROM users WHERE email = '{}'".format(
+                ",".join(fields), email
+            )
+        )
+        try:
+            return db.get_cursor().fetchone()
+        except Exception as e:
+            print(e)
+            return None
+
     # Delete user by id
     @classmethod
     def delete_by_uuid(cls, uuid):

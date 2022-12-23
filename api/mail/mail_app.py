@@ -27,11 +27,15 @@ def send_verification_email(user, verification_url):
         sender=MAIL_DEFAULT_SENDER,
         recipients=[user["email"]],
     )
-    msg.html = render_template(
-        "hh.html",
-        username=user["username"],
-        verification_url=verification_url,
-    )
+    try:
+        msg.html = render_template(
+            "email_verification.html",
+            username=user["username"],
+            verification_url=verification_url,
+        )
+    except Exception as e:
+        print("Error rendering email template: ", e)
+        return ErrorResponse(ErrorEnum.MAIL_SEND_ERROR).internal_server_error()
     try:
         mail.send(msg)
         return SuccessResponse({"message": "Verification email sent"}).ok()

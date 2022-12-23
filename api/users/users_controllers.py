@@ -11,7 +11,7 @@ users = Blueprint("users", __name__)
 
 @users.route("/<user_uuid>", methods=["GET"])
 def get_user_by_uuid(user_uuid):
-    result = {"user": us.find_one(user_uuid)}
+    result = {"user": us.find_one(user_uuid=user_uuid)}
     # user = us.find_one(user_uuid)
     if not result["user"]:  # TODO: change condition to check if user
         # contains an error
