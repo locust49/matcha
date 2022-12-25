@@ -1,6 +1,14 @@
 import os
 from flask_mail import Mail
 from flask import Flask
+import redis
+
+# Create a Redis client object
+redis_client = redis.Redis(
+    host=os.getenv("REDIS_HOST"),
+    port=os.getenv("REDIS_PORT"),
+    db=os.getenv("REDIS_DB"),
+)
 
 from api.consts.responses import SuccessResponse
 
@@ -8,6 +16,9 @@ from api.consts.responses import SuccessResponse
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__, instance_relative_config=True)
+
+    app.redis_client = redis_client
+
     # ensure the instance folder exists
     try:
         os.makedirs(app.instance_path)
@@ -17,8 +28,6 @@ def create_app(test_config=None):
     @app.route("/health")
     def health():
         return SuccessResponse({"status": "ok"}).ok()
-
-    # register the database commands
 
     with app.app_context():
         from .config.database import db_connection
