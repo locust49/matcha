@@ -35,3 +35,6 @@ class ErrorEnum(Enum):
 
     # JWT
     JWT_INVALID = 23, "Invalid JWT token"
+
+    # Mail
+    MAIL_SEND_ERROR = 24, "Error sending mail"

@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"sou3ada\",\r\n    \"first_name\": \"souad\",\r\n    \"last_name\": \"lyazid\",\r\n    \"email\": \"sou3ada@student.1337.ma\",\r\n    \"password\": \"mynothashedpassword\"\r\n}",
+							"raw": "{\r\n    \"username\": \"sou3ada\",\r\n    \"first_name\": \"souad\",\r\n    \"last_name\": \"lyazid\",\r\n    \"email\": \"matcha.app.42@gmail.com\",\r\n    \"password\": \"mynothashedpassword\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -125,8 +125,66 @@
 				{
 					"name": "delete by id",
 					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/users/remove/18656194-036a-47c6-a2b4-1131c718146e",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"remove",
+								"18656194-036a-47c6-a2b4-1131c718146e"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "verify user",
+					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "{{host}}/auth/verify/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1dWlkIjoiNWViZGU2ZjktOWRhMC00ODBjLWEzY2UtNzI0YTAxZjcxN2NmIiwiZXhwIjoxNjcxNjU2NTU4fQ.o7EJhFJufllY93fRx6MJFhELwLrD2tguaUwwk5VgubU",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"verify",
+								"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1dWlkIjoiNWViZGU2ZjktOWRhMC00ODBjLWEzY2UtNzI0YTAxZjcxN2NmIiwiZXhwIjoxNjcxNjU2NTU4fQ.o7EJhFJufllY93fRx6MJFhELwLrD2tguaUwwk5VgubU"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "re-send verification",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"matcha.app.42@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/send/verification",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"send",
+								"verification"
+							]
+						}
 					},
 					"response": []
 				}
