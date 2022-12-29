@@ -7,7 +7,7 @@ from typing import Union
 from datetime import datetime, timedelta
 
 from api.consts.error_enum import ErrorEnum
-from .auth_middlewares import get_secret_key, set_auth_headers
+from .auth_middlewares import get_secret_key
 import api.users.users_services as us
 from api.users.users_models import Users
 from api.mail.mail_app import send_verification_email
