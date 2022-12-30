@@ -62,14 +62,14 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{host}}/users/remove/afd5c797-3969-4875-b1f8-c50bb5f204d4",
+							"raw": "{{host}}/users/remove/00a515f3-7a6e-4763-bad1-8da865798146",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
 								"users",
 								"remove",
-								"afd5c797-3969-4875-b1f8-c50bb5f204d4"
+								"00a515f3-7a6e-4763-bad1-8da865798146"
 							]
 						}
 					},
@@ -107,7 +107,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"sou3ada3\",\r\n    \"first_name\": \"souad\",\r\n    \"last_name\": \"lyazid\",\r\n    \"email\": \"matcha.42.app@gmail.com\",\r\n    \"password\": \"mynothashedpassword\"\r\n}",
+							"raw": "{\r\n    \"username\": \"sou3ada\",\r\n    \"first_name\": \"souad\",\r\n    \"last_name\": \"lyazid\",\r\n    \"email\": \"matcha.42.app@gmail.com\",\r\n    \"password\": \"mynothashedpassword\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -134,9 +134,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"var jsonData = JSON.parse(responseBody);\r",
-									"postman.setEnvironmentVariable(\"access_token\", jsonData.data[\"access_token\"]);\r",
-									"postman.setEnvironmentVariable(\"refresh_token\", jsonData.data[\"refresh_token\"]);"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -147,7 +145,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"sou3ada0\",\n    \"password\": \"mynothashedpassword\"\n}",
+							"raw": "{\n    \"username\": \"matcha\",\n    \"password\": \"nothashedpassword\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -257,6 +255,79 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Request password reset",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"matcha.42.app@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/forgot-password",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reset password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"password\": \"newnothashedpassword\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/reset/J-J7lPtnd9TO7gM538v8crL0PvsaGsiI8OMFLRTozZVd63DSbe9HyooWRqcxg947-yPTPlLPnThMiiyhuUsX5w",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"reset",
+								"J-J7lPtnd9TO7gM538v8crL0PvsaGsiI8OMFLRTozZVd63DSbe9HyooWRqcxg947-yPTPlLPnThMiiyhuUsX5w"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/auth/logout",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -279,16 +350,6 @@
 			"response": []
 		}
 	],
-	"auth": {
-		"type": "bearer",
-		"bearer": [
-			{
-				"key": "token",
-				"value": "{{access_token}}",
-				"type": "string"
-			}
-		]
-	},
 	"event": [
 		{
 			"listen": "prerequest",
