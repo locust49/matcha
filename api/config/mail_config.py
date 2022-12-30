@@ -10,3 +10,4 @@ MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
 
 
 SUBJECT_EMAIL_VERIFICATION = "[Matcha] - Verify your email address !!"
+SUBJECT_PASSWORD_RESET = "[Matcha] - Reset your password !!"

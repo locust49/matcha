@@ -42,3 +42,27 @@ def send_verification_email(user, verification_url):
     except Exception as e:
         print("Error sending email: ", e)
         return ErrorResponse(ErrorEnum.MAIL_SEND_ERROR).internal_server_error()
+
+
+def send_reset_password_email(user, password_reset_url):
+    configure_mail()
+    msg = Message(
+        subject=SUBJECT_PASSWORD_RESET + user["username"],
+        sender=MAIL_DEFAULT_SENDER,
+        recipients=[user["email"]],
+    )
+    try:
+        msg.html = render_template(
+            "password_reset.html",
+            username=user["username"],
+            password_reset_url=password_reset_url,
+        )
+    except Exception as e:
+        print("Error rendering email template: ", e)
+        return ErrorResponse(ErrorEnum.MAIL_SEND_ERROR).internal_server_error()
+    try:
+        mail.send(msg)
+        return SuccessResponse({"message": "Password reset email sent"}).ok()
+    except Exception as e:
+        print("Error sending email: ", e)
+        return ErrorResponse(ErrorEnum.MAIL_SEND_ERROR).internal_server_error()

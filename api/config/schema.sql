@@ -1,4 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+SET TIME ZONE 'UTC';
 
 -- -----------------------------------------------------
 -- Table db_matcha.`users`
@@ -22,3 +23,10 @@ CREATE TABLE IF NOT EXISTS users (
 -- VALUES ('admin', 'admin@admin.ma' , 'admin', 'admin', 'admin');
 
 
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  "user_id" uuid NOT NULL,
+  "token" VARCHAR(128) NOT NULL UNIQUE,
+  "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("user_id", "token"),
+  FOREIGN KEY ("user_id") REFERENCES users("uuid")
+);
