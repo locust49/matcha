@@ -43,6 +43,7 @@ def generate_password_reset_url(token):
 
 def refresh_token():
     refresh_token = current_app.redis_client.get(REFRESH_TOKEN)
+    print("*) REFRESH TOKEN: ", refresh_token)
     if not refresh_token:
         return ErrorResponse(ErrorEnum.AUTH_INVALID_REFRESH_TOKEN).unauthorized()
     try:
@@ -54,11 +55,11 @@ def refresh_token():
     except PyJWTError as e:
         if isinstance(e, ExpiredSignatureError):
             current_app.redis_client.delete(REFRESH_TOKEN)
-            current_app.redis_client.delete(ACCESS_TOKEN)
-            return JWTErrorResponse(
+            response = JWTErrorResponse(
                 ErrorEnum.AUTH_TOKEN_EXPIRED, e
             ).unauthorized()
-            # TODO: log out user here
+            response.set_cookie(ACCESS_TOKEN, "", expires=0)
+            return response
         return JWTErrorResponse(ErrorEnum.JWT_INVALID, e).unauthorized()
     user = us.find_one(
         user_uuid=data["uuid"],

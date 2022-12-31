@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from flask import request, Blueprint, current_app
+from flask import request, Blueprint, current_app, make_response
 from werkzeug.security import check_password_hash
 from jwt.api_jwt import encode, decode
 from jwt.exceptions import PyJWTError, ExpiredSignatureError
@@ -57,8 +57,6 @@ def signup_user():
     )
     try:
         send_verification_email(data, verification_url)
-        # TODO: Store all verification tokens in redis and check if the token is valid
-        # current_app.redis_client.set(VERIFICATION_TOKEN, verification_token)
     except Exception as e:
         return e
     return SuccessResponse({"user": inserted_user}).created()
@@ -94,8 +92,13 @@ def login():
                 algorithm="HS256",
             )
             current_app.redis_client.set(REFRESH_TOKEN, refresh_token)
-            current_app.redis_client.set(ACCESS_TOKEN, access_token)
-            return SuccessResponse({"message": "Logged in successfully."}).ok()
+
+            # Set the JWT access token in the response header
+            response = make_response(
+                SuccessResponse({"message": "Logged in successfully."}).ok()
+            )
+            response.set_cookie(ACCESS_TOKEN, f"Bearer {access_token}")
+            return response
 
         except PyJWTError as e:
             return JWTErrorResponse(
@@ -162,8 +165,12 @@ def refresh_verification_token():
 @authentication.route("/logout", methods=["GET"])
 def logout():
     current_app.redis_client.delete(REFRESH_TOKEN)
-    current_app.redis_client.delete(ACCESS_TOKEN)
-    return SuccessResponse({"message": "Logged out successfully."}).ok()
+    # Delete access token from cookies
+    response = make_response(
+        SuccessResponse({"message": "Logged out successfully."}).ok()
+    )
+    response.set_cookie(ACCESS_TOKEN, "", expires=0)
+    return response
 
 
 @authentication.route("/forgot-password", methods=["POST"])
@@ -202,7 +209,13 @@ def reset_password():
             return result
     except Exception as e:
         return ErrorResponse(ErrorEnum.DB_QUERY_FAILED).internal_server_error()
-    return SuccessResponse({"message": "Password reset email sent!"}).ok()
+    response = make_response(
+        SuccessResponse({"message": "Password reset email sent!"}).ok()
+    )
+    # Reset tokens
+    response.set_cookie(ACCESS_TOKEN, "", expires=0)
+    current_app.redis_client.delete(REFRESH_TOKEN)
+    return response
 
 
 @authentication.route("/reset/<token>", methods=["POST"])

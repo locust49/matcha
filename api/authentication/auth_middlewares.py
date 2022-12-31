@@ -1,8 +1,7 @@
 from functools import wraps
 from flask import request, current_app
 from jwt.exceptions import PyJWTError, ExpiredSignatureError
-from jwt.api_jwt import decode
-import os
+from jwt import decode
 from api.consts.error_enum import ErrorEnum
 from api.consts.responses import ErrorResponse, JWTErrorResponse
 from api.authentication.auth_helpers import refresh_token, get_secret_key
@@ -15,7 +14,10 @@ ACCESS_TOKEN = "access_token"
 def token_required(fct):
     @wraps(fct)
     def decorator(*args, **kwargs):
-        token = current_app.redis_client.get(ACCESS_TOKEN)
+        token_cookie = request.cookies.get(ACCESS_TOKEN)
+        if not token_cookie:
+            return ErrorResponse(ErrorEnum.AUTH_INVALID_TOKEN).unauthorized()
+        token = token_cookie.replace("Bearer b'", "").replace("'", "")
         if not token:
             return ErrorResponse(ErrorEnum.AUTH_INVALID_TOKEN).unauthorized()
         try:
