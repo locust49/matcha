@@ -107,7 +107,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"sou3ada\",\r\n    \"first_name\": \"souad\",\r\n    \"last_name\": \"lyazid\",\r\n    \"email\": \"matcha.42.app@gmail.com\",\r\n    \"password\": \"mynothashedpassword\"\r\n}",
+							"raw": "{\r\n    \"username\": \"psyduck\",\r\n    \"first_name\": \"yellow\",\r\n    \"last_name\": \"duck\",\r\n    \"email\": \"matcha.app.42@gmail.com\",\r\n    \"password\": \"psypsypsypsy\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -145,7 +145,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"matcha\",\n    \"password\": \"nothashedpassword\"\n}",
+							"raw": "{\n    \"username\": \"psyduck\",\n    \"password\": \"psypsypsypsy\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -213,57 +213,13 @@
 					"response": []
 				},
 				{
-					"name": "refresh token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = JSON.parse(responseBody);",
-									"postman.setEnvironmentVariable(\"access_token\", jsonData.data[\"access_token\"]);",
-									"postman.setEnvironmentVariable(\"refresh_token\", jsonData.data[\"refresh_token\"]);"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{host}}/auth/refresh/token",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"auth",
-								"refresh",
-								"token"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Request password reset",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"matcha.42.app@gmail.com\"\n}",
+							"raw": "{\n    \"email\": \"matcha.app.42@gmail.com\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -290,7 +246,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"password\": \"newnothashedpassword\"\n}",
+							"raw": "{\n    \"password\": \"psyduckevolved\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -298,14 +254,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{host}}/auth/reset/J-J7lPtnd9TO7gM538v8crL0PvsaGsiI8OMFLRTozZVd63DSbe9HyooWRqcxg947-yPTPlLPnThMiiyhuUsX5w",
+							"raw": "{{host}}/auth/reset/sCSJ0q9soDnr0anfHkXMkynnbA2GSt1V0H95zkbW4QjsU49Zlsd5IH0qM4lW1AHNjm3tavbrC69X6quAXKQY6A",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
 								"auth",
 								"reset",
-								"J-J7lPtnd9TO7gM538v8crL0PvsaGsiI8OMFLRTozZVd63DSbe9HyooWRqcxg947-yPTPlLPnThMiiyhuUsX5w"
+								"sCSJ0q9soDnr0anfHkXMkynnbA2GSt1V0H95zkbW4QjsU49Zlsd5IH0qM4lW1AHNjm3tavbrC69X6quAXKQY6A"
 							]
 						}
 					},
