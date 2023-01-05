@@ -35,9 +35,12 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 -- For profiles table
 -- -----------------------------------------------------
 
-CREATE TYPE "gender_enum" AS ENUM ('FEMALE', 'MALE', 'BI');
-
-CREATE TYPE "orientation_enum" AS ENUM ('HETERO', 'HOMO', 'BI');
+DO $$ BEGIN
+    CREATE TYPE "gender_enum" AS ENUM ('FEMALE', 'MALE', 'BI');
+    CREATE TYPE "orientation_enum" AS ENUM ('HETERO', 'HOMO', 'BI');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 
 -- -----------------------------------------------------
@@ -54,8 +57,9 @@ CREATE TABLE IF NOT EXISTS profiles
     "last_login" TIMESTAMP,
     "location" POINT NOT NULL,
     "gender" gender_enum NOT NULL,
-    "orientation" orientation_enum NOT NULL DEFAULT 'Bi',
-    "biography" varchar(500)
+    "orientation" orientation_enum NOT NULL DEFAULT 'BI',
+    "biography" varchar(500),
+    "image_primary_id" uuid NOT NULL
 );
 
 
@@ -74,4 +78,9 @@ CREATE TABLE IF NOT EXISTS images
 -- Alter table db_matcha.`profiles` to add column `profile_pic`
 -- -----------------------------------------------------
 
-ALTER TABLE profiles ADD COLUMN "image_primary_id" uuid NOT NULL REFERENCES images("uuid");
+DO $$ BEGIN
+    ALTER TABLE profiles
+    ADD CONSTRAINT fk_images FOREIGN KEY ("image_primary_id") REFERENCES images("uuid");
+  EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
