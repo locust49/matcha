@@ -93,7 +93,7 @@ def login():
             )
             current_app.redis_client.set(REFRESH_TOKEN, refresh_token)
 
-            # Set the JWT access token in the response header
+            # * Set the JWT access token in the response header
             response = make_response(
                 SuccessResponse({"message": "Logged in successfully."}).ok()
             )
@@ -165,7 +165,7 @@ def refresh_verification_token():
 @authentication.route("/logout", methods=["GET"])
 def logout():
     current_app.redis_client.delete(REFRESH_TOKEN)
-    # Delete access token from cookies
+    # * Delete access token from cookies
     response = make_response(
         SuccessResponse({"message": "Logged out successfully."}).ok()
     )
@@ -180,15 +180,19 @@ def reset_password():
         return ErrorResponse(ErrorEnum.REQ_INVALID_INPUT).bad_request()
 
     user = us.find_one(email=email["email"], secure=False)
+    """ 
+        * Should verify wether an email exist or not, but not to give away information
+        * about the existence of an account
+    """
     if not user:
         return ErrorResponse(ErrorEnum.AUTH_INVALID_USER).unauthorized()
 
     token = None
     try:
-        # check if user has already requested a password reset
+        # * Check if user has already requested a password reset
         record = ResetPasswordRequest.get_by_user(user["uuid"])
         if record is not None:
-            # check if token is still valid
+            # * Check if token is still valid
             if (
                 record["created_at"]
                 + timedelta(seconds=AUTH_RESET_TOKEN_EXPIRATION)
@@ -196,7 +200,7 @@ def reset_password():
             ):
                 token = record["token"]
             else:
-                # delete old record
+                # * Delete old record
                 ResetPasswordRequest.delete(record["token"])
         if token is None:
             token = secrets.token_urlsafe(64)
@@ -212,7 +216,7 @@ def reset_password():
     response = make_response(
         SuccessResponse({"message": "Password reset email sent!"}).ok()
     )
-    # Reset tokens
+    # * Reset tokens
     response.set_cookie(ACCESS_TOKEN, "", expires=0)
     current_app.redis_client.delete(REFRESH_TOKEN)
     return response
