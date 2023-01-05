@@ -31,19 +31,18 @@ def token_required(fct):
                 if "error" in refresh_access_token[0]:
                     error_refresh = refresh_access_token
                     return error_refresh
-                # if refresh token is expired
+                # * Exit if refresh token is expired
                 if refresh_access_token[1] != 200:
                     return ErrorResponse(
                         ErrorEnum.AUTH_INVALID_TOKEN
                     ).unauthorized()
-                # get new access token
+                # * Generate new access token
                 new_access_token = refresh_access_token[0]["data"][
                     "access_token"
                 ]
-                # set new access token in redis
+                # * Set new access token in redis
                 current_app.redis_client.set(ACCESS_TOKEN, new_access_token)
                 print("Refreshed access token")
-                # decode new access token
                 data = decode(
                     new_access_token,
                     get_secret_key(),
