@@ -84,3 +84,87 @@ DO $$ BEGIN
   EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
+
+
+-- -----------------------------------------------------
+-- Table db_matcha.`profile_status_log`
+-- Last seen, online status, location (to be implemented)
+-- -----------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS profile_status_log (
+  "uuid" uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  "profile_id" uuid NOT NULL REFERENCES profiles("uuid"),
+  "is_online" BOOLEAN NOT NULL,
+  "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  -- "location" POINT NOT NULL
+);
+
+
+-- -----------------------------------------------------
+-- Table db_matcha.`tags`
+-- -----------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS tags (
+  "uuid" uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  "label" VARCHAR(20) NOT NULL UNIQUE,
+  "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- -----------------------------------------------------
+-- Junction table db_matcha.`profile_tags`
+-- -----------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS profile_tags (
+  "profile_id" uuid NOT NULL REFERENCES profiles("uuid"),
+  "tag_id" uuid NOT NULL REFERENCES tags("uuid"),
+  PRIMARY KEY ("profile_id", "tag_id")
+);
+
+
+-- -----------------------------------------------------
+-- Table db_matcha.`likes`
+-- -----------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS likes (
+  "uuid" uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  "profile_id" uuid NOT NULL REFERENCES profiles("uuid"),
+  "liked_profile_id" uuid NOT NULL REFERENCES profiles("uuid"),
+  "is_matched" BOOLEAN NOT NULL DEFAULT FALSE,
+  "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE ("profile_id", "liked_profile_id")
+);
+
+
+-- -----------------------------------------------------
+-- Table db_matcha.`profile_views_log`
+-- -----------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS profile_views_log (
+  "uuid" uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  "profile_id" uuid NOT NULL REFERENCES profiles("uuid"),
+  "viewed_profile_id" uuid NOT NULL REFERENCES profiles("uuid"),
+  "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE ("profile_id", "viewed_profile_id")
+);
+
+
+-- -----------------------------------------------------
+-- Table db_matcha.`reports_blocks_log`
+-- -----------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS reports_blocks_log (
+  "uuid" uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  "profile_id" uuid NOT NULL REFERENCES profiles("uuid"),
+  "reported_blocked_profile_id" uuid NOT NULL REFERENCES profiles("uuid"),
+  "is_reported" BOOLEAN NOT NULL DEFAULT FALSE,
+  "is_blocked" BOOLEAN NOT NULL DEFAULT FALSE,
+  "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE ("profile_id", "reported_blocked_profile_id")
+);
+
+-- -----------------------------------------------------
+-- Table db_matcha.`notifications`
+-- TODO: to be implemented
+-- -----------------------------------------------------
+
+
