@@ -1,49 +1,250 @@
-from flask import request, jsonify, Blueprint, make_response
+from http import HTTPStatus
+from flask import request, Blueprint, current_app, make_response
 from werkzeug.security import check_password_hash
-from jwt.api_jwt import encode
+from jwt.api_jwt import encode, decode
+from jwt.exceptions import PyJWTError, ExpiredSignatureError
 from typing import Union
 from datetime import datetime, timedelta
+
+from api.consts.error_enum import ErrorEnum
 from .auth_middlewares import get_secret_key
+from .auth_models import ResetPasswordRequest
 import api.users.users_services as us
 from api.users.users_models import Users
+from api.mail.mail_app import send_verification_email, send_reset_password_email
+from ..consts.responses import SuccessResponse, ErrorResponse, JWTErrorResponse
+from ..authentication.auth_helpers import (
+    generate_verification_url,
+    generate_password_reset_url,
+)
+import os
+import secrets
 
 authentication = Blueprint("authentication", __name__)
+
+AUTH_TOKEN_EXPIRATION = int(os.getenv("AUTH_TOKEN_EXPIRATION"))
+AUTH_REFRESH_TOKEN_EXPIRATION = int(os.getenv("AUTH_REFRESH_TOKEN_EXPIRATION"))
+VERIFICATION_TOKEN_EXPIRATION = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION"))
+AUTH_RESET_TOKEN_EXPIRATION = int(os.getenv("AUTH_RESET_TOKEN_EXPIRATION"))
+
+
+ACCESS_TOKEN = "access_token"
+REFRESH_TOKEN = "refresh_token"
+VERIFICATION_TOKEN = "verification_token"
 
 
 @authentication.route("/register", methods=["POST"])
 def signup_user():
     data: Union[Users, None] = request.get_json()
-    # needs verification
+    # TODO: data needs verification
     if not data:
-        return jsonify({"message": "No input data provided"}), 400
+        return ErrorResponse(ErrorEnum.REQ_INVALID_INPUT).bad_request()
     inserted_user = us.insert_one(Users.from_dict(data))
-    return jsonify({"message": "registered successfully", "user": inserted_user}), 201
+    try:
+        verification_token = encode(
+            {
+                "uuid": inserted_user["uuid"],
+                "exp": datetime.utcnow()
+                + timedelta(seconds=VERIFICATION_TOKEN_EXPIRATION),
+            },
+            get_secret_key(),
+            algorithm="HS256",
+        )
+    except PyJWTError as e:
+        return JWTErrorResponse(ErrorEnum.JWT_ERROR).internal_server_error()
+    verification_url = generate_verification_url(
+        verification_token.decode("UTF-8")
+    )
+    try:
+        send_verification_email(data, verification_url)
+    except Exception as e:
+        return e
+    return SuccessResponse({"user": inserted_user}).created()
 
 
 @authentication.route("/login", methods=["POST"])
 def login():
     auth = request.get_json()
     if not auth or not auth["username"] or not auth["password"]:
-        return make_response("missing body", 401, {"Authentication": 'login required"'})
-
-    user = us.find_one(username=auth["username"])
+        return ErrorResponse(ErrorEnum.REQ_INVALID_INPUT).bad_request()
+    user = us.find_one(username=auth["username"], secure=False)
     if not user:
-        return make_response(
-            {"error": "inexistant user"}, 404, {"Authentication": 'login required"'}
-        )
-    print(
-        "Verifying password : {}".format(
-            check_password_hash(user["password"], auth["password"])
-        )
-    )
+        return ErrorResponse(ErrorEnum.AUTH_INVALID_CREDENTIALS).unauthorized()
     if check_password_hash(user["password"], auth["password"]):
+        try:
+            access_token = encode(
+                {
+                    "uuid": user["uuid"],
+                    "exp": datetime.utcnow()
+                    + timedelta(seconds=AUTH_TOKEN_EXPIRATION),
+                },
+                get_secret_key(),
+                algorithm="HS256",
+            )
+
+            refresh_token = encode(
+                {
+                    "uuid": user["uuid"],
+                    "exp": datetime.utcnow()
+                    + timedelta(seconds=AUTH_REFRESH_TOKEN_EXPIRATION),
+                },
+                get_secret_key(),
+                algorithm="HS256",
+            )
+            current_app.redis_client.set(REFRESH_TOKEN, refresh_token)
+
+            # * Set the JWT access token in the response header
+            response = make_response(
+                SuccessResponse({"message": "Logged in successfully."}).ok()
+            )
+            response.set_cookie(ACCESS_TOKEN, f"Bearer {access_token}")
+            return response
+
+        except PyJWTError as e:
+            return JWTErrorResponse(
+                ErrorEnum.JWT_INVALID, e
+            ).internal_server_error()
+    return ErrorResponse(ErrorEnum.AUTH_INVALID_CREDENTIALS).unauthorized()
+
+
+@authentication.route("/verify/<token>", methods=["GET"])
+def verify(token):
+    try:
+        data = decode(token, get_secret_key(), algorithms=["HS256"])
+    except PyJWTError as e:
+        if isinstance(e, ExpiredSignatureError):
+            return JWTErrorResponse(
+                ErrorEnum.AUTH_TOKEN_EXPIRED, e
+            ).unauthorized()
+        return JWTErrorResponse(ErrorEnum.JWT_INVALID, e).unauthorized()
+    user = us.find_one(
+        user_uuid=data["uuid"],
+    )
+    if not user:
+        return ErrorResponse(ErrorEnum.AUTH_INVALID_USER).unauthorized()
+    if user["verified"]:
+        return ErrorResponse(ErrorEnum.USR_ALREADY_VERIFIED).bad_request()
+    user = us.update_one(user["uuid"])
+    return SuccessResponse({"user": user}).partial_content()
+
+
+@authentication.route("/refresh/verification", methods=["POST"])
+def refresh_verification_token():
+    identifier = request.get_json()
+    if not identifier:
+        return ErrorResponse(ErrorEnum.REQ_INVALID_INPUT).bad_request()
+    if "email" in identifier and "username" not in identifier:
+        user = us.find_one(email=identifier["email"], secure=False)
+    elif "username" in identifier and "email" not in identifier:
+        user = us.find_one(username=identifier["username"], secure=False)
+    else:
+        return ErrorResponse(ErrorEnum.REQ_INVALID_INPUT).bad_request()
+    if not user:
+        return ErrorResponse(ErrorEnum.AUTH_INVALID_USER).unauthorized()
+    if user["verified"]:
+        return ErrorResponse(ErrorEnum.USR_ALREADY_VERIFIED).bad_request()
+    try:
         token = encode(
-            {"uuid": user["uuid"], "exp": datetime.utcnow() + timedelta(minutes=45)},
+            {
+                "uuid": user["uuid"],
+                "exp": datetime.utcnow()
+                + timedelta(seconds=VERIFICATION_TOKEN_EXPIRATION),
+            },
             get_secret_key(),
             algorithm="HS256",
         )
-        return {"token": token.decode("UTF-8")}  # type: ignore
+    except PyJWTError as e:
+        return JWTErrorResponse(ErrorEnum.JWT_ERROR).internal_server_error()
+    verification_url = generate_verification_url(token.decode("UTF-8"))
+    result = send_verification_email(user, verification_url)
+    if result[1] != HTTPStatus.OK:
+        return result
+    return SuccessResponse({"message": "Verification email sent!"}).ok()
 
-    return make_response(
-        "could not verify", 401, {"Authentication": '"Authentication Failed"'}
+
+@authentication.route("/logout", methods=["GET"])
+def logout():
+    current_app.redis_client.delete(REFRESH_TOKEN)
+    # * Delete access token from cookies
+    response = make_response(
+        SuccessResponse({"message": "Logged out successfully."}).ok()
     )
+    response.set_cookie(ACCESS_TOKEN, "", expires=0)
+    return response
+
+
+@authentication.route("/forgot-password", methods=["POST"])
+def reset_password():
+    email = request.get_json()
+    if not email:
+        return ErrorResponse(ErrorEnum.REQ_INVALID_INPUT).bad_request()
+
+    user = us.find_one(email=email["email"], secure=False)
+    """ 
+        * Should verify wether an email exist or not, but not to give away information
+        * about the existence of an account
+    """
+    if not user:
+        return SuccessResponse({"message": "Password reset email sent!"}).ok()
+
+    token = None
+    try:
+        # * Check if user has already requested a password reset
+        record = ResetPasswordRequest.get_by_user(user["uuid"])
+        if record is not None:
+            # * Check if token is still valid
+            if (
+                record["created_at"]
+                + timedelta(seconds=AUTH_RESET_TOKEN_EXPIRATION)
+                > datetime.utcnow()
+            ):
+                token = record["token"]
+            else:
+                # * Delete old record
+                ResetPasswordRequest.delete(record["token"])
+        if token is None:
+            token = secrets.token_urlsafe(64)
+            ResetPasswordRequest.insert(user["uuid"], token)
+
+        # TODO: move to service !
+        reset_url = generate_password_reset_url(token)
+        result = send_reset_password_email(user, reset_url)
+        if result[1] != HTTPStatus.OK:
+            return result
+    except Exception as e:
+        return ErrorResponse(ErrorEnum.DB_QUERY_FAILED).internal_server_error()
+    response = make_response(
+        SuccessResponse({"message": "Password reset email sent!"}).ok()
+    )
+    # * Reset tokens
+    response.set_cookie(ACCESS_TOKEN, "", expires=0)
+    current_app.redis_client.delete(REFRESH_TOKEN)
+    return response
+
+
+@authentication.route("/reset/<token>", methods=["POST"])
+def reset_password_with_token(token):
+    password = request.get_json()
+    if not password:
+        return ErrorResponse(ErrorEnum.REQ_INVALID_INPUT).bad_request()
+    try:
+        reset_request = ResetPasswordRequest.get_by_token(token=token)
+        if reset_request is None:
+            return ErrorResponse(
+                ErrorEnum.AUTH_INVALID_RESET_TOKEN
+            ).unauthorized()
+        expires_at = reset_request["created_at"] + timedelta(
+            seconds=AUTH_RESET_TOKEN_EXPIRATION
+        )
+        if datetime.utcnow() > expires_at:
+            return ErrorResponse(ErrorEnum.AUTH_TOKEN_EXPIRED).unauthorized()
+        user = us.find_one(user_uuid=reset_request["user_id"])
+        if not user:
+            return ErrorResponse(ErrorEnum.AUTH_INVALID_USER).unauthorized()
+        us.update_password(user["uuid"], password["password"])
+        ResetPasswordRequest.delete(token)
+        return SuccessResponse(
+            {"message": "Password reset successful!"}
+        ).partial_content()
+    except Exception as e:
+        return ErrorResponse(ErrorEnum.DB_QUERY_FAILED).internal_server_error()

@@ -74,4 +74,5 @@ CREATE TABLE IF NOT EXISTS images
 -- Alter table db_matcha.`profiles` to add column `profile_pic`
 -- -----------------------------------------------------
 
+
 ALTER TABLE profiles ADD COLUMN "image_primary_id" uuid NOT NULL REFERENCES images("uuid");
