@@ -185,7 +185,7 @@ def reset_password():
         * about the existence of an account
     """
     if not user:
-        return ErrorResponse(ErrorEnum.AUTH_INVALID_USER).unauthorized()
+        return SuccessResponse({"message": "Password reset email sent!"}).ok()
 
     token = None
     try:
