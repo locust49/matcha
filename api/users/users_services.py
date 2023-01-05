@@ -65,3 +65,18 @@ def update_one(user_uuid):
         print(e)
         return None
     return updated_user
+
+
+# TODO: should combine update_one and update_password
+def update_password(user_uuid, password):
+    if not user_uuid:
+        return None
+    user = Users.get_by_uuid(user_uuid)
+    if not user:
+        return None
+    try:
+        updated_user = Users.update_password(user_uuid, password)
+    except Exception as e:
+        print(e)
+        return None
+    return updated_user

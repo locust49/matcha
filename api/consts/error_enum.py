@@ -25,16 +25,17 @@ class ErrorEnum(Enum):
 
     AUTH_REFRESH_TOKEN_EXPIRED = 18, "Refresh token expired"
     AUTH_INVALID_USER = 19, "Invalid user"
+    AUTH_INVALID_RESET_TOKEN = 20, "Invalid reset token"
 
     # Database
-    DB_CONNECTION_FAILED = 20, "Database connection failed"
-    DB_QUERY_FAILED = 21, "Database query failed"
+    DB_CONNECTION_FAILED = 21, "Database connection failed"
+    DB_QUERY_FAILED = 22, "Database query failed"
 
     # Requests
-    REQ_INVALID_INPUT = 22, "Invalid data provided"
+    REQ_INVALID_INPUT = 23, "Invalid data provided"
 
     # JWT
-    JWT_INVALID = 23, "Invalid JWT token"
+    JWT_INVALID = 24, "Invalid JWT token"
 
     # Mail
-    MAIL_SEND_ERROR = 24, "Error sending mail"
+    MAIL_SEND_ERROR = 25, "Error sending mail"

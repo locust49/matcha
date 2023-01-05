@@ -3,7 +3,7 @@ from .error_enum import ErrorEnum
 
 
 class SuccessResponse:
-    def __init__(self, data):
+    def __init__(self, data=None):
         self.data = data
 
     def to_json(self):

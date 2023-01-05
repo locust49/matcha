@@ -210,6 +210,20 @@ class Users(UsersPublic):
         # encrypted password
         self.password = generate_password_hash(password, method="sha256")
 
+    @classmethod
+    def update_password(cls, uuid, password):
+        db.get_cursor().execute(
+            "UPDATE users SET password = '{}' WHERE uuid = '{}' \
+                RETURNING uuid".format(
+                generate_password_hash(password, method="sha256"), uuid
+            )
+        )
+        try:
+            return db.get_cursor().fetchone()
+        except Exception as e:
+            print(e)
+            return None
+
     # Return the object as a dictionary
     def to_dict(self):
         pass
